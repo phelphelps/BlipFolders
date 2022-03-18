@@ -1,0 +1,15 @@
+{"manifest_version": 3,
+"name": "Blip Folders",
+"version": "1.0",
+"description": "Bla bla",
+"background": {
+    "service_worker": "js/main.js"
+},
+"content_scripts": [
+    {
+      "matches": ["https://*.blip.ai/application"],
+      "css": ["css/style.css"],
+      "js": ["js/content-script.js"]
+    }
+  ]
+}
