@@ -1,60 +1,72 @@
 let bots = {};
-let teste;
 let sideBar;
 let sideBarContent;
 let routerBtn;
+var oldURL = "";
 
-setInterval(() => console.log("o"), 4000);
+function clearVariables() {
+  bots = {};
+  oldURL = "";
+}
+
+setInterval(checkURLchange, 1000);
 function checkURLchange() {
-  console.log(window.location.href);
   if (window.location.href != oldURL) {
-    console.log(window.location.href);
-    initExtension();
+    if (window.location.href.includes("application")) {
+      initExtension();
+    }
     oldURL = window.location.href;
   }
 }
 
-var oldURL = window.location.href;
-setInterval(checkURLchange, 1000);
-
-const check = setInterval(() => {
-  const contactsListItems = document.getElementsByTagName("contact");
-  if (contactsListItems.length > 0) {
-    const mainWrapper = document.getElementsByTagName("ui-view");
-    setTimeout(() => {
-      mainWrapper[0].innerHTML += `
-    <div class="side-bar flex-column hidden">
-      <div class="sidebar-content-header background-text-dark-5 bp-c-white ph5 pt2">
-        <div class="sidebar-helper-header">
-            <input class="bp-c-white w-100 sidebar-title" type="text" value="Blip Folders" readonly>
-            <div class="sidebar-helper-header__actions">
-                <span>
-                    <i class="icon-close cursor-pointer" id="close-menu"></i>
-                </span>
+function insertSideBar() {
+  return new Promise((resolve) => {
+    clearVariables();
+    const check = setInterval(() => {
+      const contactsListItems = document.getElementsByTagName("contact");
+      if (contactsListItems.length > 0) {
+        const mainWrapper = document.getElementsByTagName("ui-view");
+        setTimeout(() => {
+          mainWrapper[0].innerHTML += `
+        <div class="side-bar flex-column hidden">
+          <div class="sidebar-content-header background-text-dark-5 bp-c-white ph5 pt2">
+            <div class="sidebar-helper-header">
+                <input class="bp-c-white w-100 sidebar-title" type="text" value="Blip Folders" readonly>
+                <div class="sidebar-helper-header__actions">
+                    <span>
+                        <i class="icon-close cursor-pointer" id="close-menu"></i>
+                    </span>
+                </div>
             </div>
-        </div>
-      </div>  
-      <div class="sidebar-content-body">
-        <div class="sidebar-inner-content pa5">
-            <div class="flex flex-column">
-                <span class="lh-solid w-100 bp-fs-5 fw7 ttu pb1" id="folder-title">Pasta de skills {nome do grupo}</span>
-                <form class="flex" id="btn-container-blipfolders"></form>
-                <contact-list id="side-bar-contact-list"></contact-list>
-                <div class="bp-divider-h bp-divider w-100 mv4"></div>
+          </div>  
+          <div class="sidebar-content-body">
+            <div class="sidebar-inner-content pa5">
+                <div class="flex flex-column">
+                    <span class="lh-solid w-100 bp-fs-5 fw7 ttu pb1" id="folder-title">Pasta de skills {nome do grupo}</span>
+                    <form class="flex" id="btn-container-blipfolders"></form>
+                    <contact-list id="side-bar-contact-list"></contact-list>
+                    <div class="bp-divider-h bp-divider w-100 mv4"></div>
+                </div>
             </div>
-        </div>
-      </div>
-    </div>`;
-    }, 2000);
-    clearInterval(check);
-  }
-}, 100);
+          </div>
+        </div>`;
+          resolve();
+        }, 200);
+        clearInterval(check);
+      }
+    }, 100);
+  });
+}
 
 function initExtension() {
+  insertSideBar().then(() => orderBots());
+}
+
+async function orderBots() {
   createBotList().then(() => {
-    document
-      .getElementById("close-menu")
-      .addEventListener("click", () => toggle());
+    document.getElementById("close-menu").addEventListener("click", () => {
+      toggle();
+    });
     createGroups();
   });
 }
@@ -84,6 +96,7 @@ async function createBotList() {
             }
           }
         } else {
+          const guid = guidGenerator();
           if (botType === "Roteador") {
             bots[botName] = {
               allBots: [],
@@ -92,7 +105,6 @@ async function createBotList() {
               roteador: getBotURL(bot),
             };
           }
-          const guid = guidGenerator();
           bots[botName] = {
             allBots: [botClone],
             image: botImage,
@@ -172,10 +184,8 @@ function toggle(botGroup, botName) {
     return;
   }
 
-  if (bots[botName].roteador) {
-    routerBtn = document.getElementById("router-btn");
-    addButtons(bots[botName]);
-  }
+  routerBtn = document.getElementById("router-btn");
+  addButtons(bots[botName]);
 
   title.innerHTML = `Pasta de skills referentes à: ${botName}`;
   if (sideBar.className.includes("hidden")) {
@@ -203,11 +213,19 @@ function openAllBots(bots) {
 }
 
 function addButtons(botGroup) {
+  let availability;
   console.log(botGroup, botGroup.roteador);
   const container = document.getElementById("btn-container-blipfolders");
-  container.innerHTML = `
+  if (botGroup.roteador !== "") {
+    container.innerHTML = `
     <button formaction="${botGroup.roteador}" class="bp-btn button-folders bp-btn--bot bp-btn--rounded mb4">Acessar roteador</button>
-    <button class="bp-btn button-folders bp-btn--bot bp-btn--rounded mb4" type="button">coming soon ;)</button>`;
+    <button disabled class="bp-btn button-folders bp-btn--bot bp-btn--rounded mb4" type="button">coming soon ;)</button>`;
+  } else {
+    container.innerHTML = `
+    <button disabled class="bp-btn button-folders bp-btn--bot bp-btn--rounded mb4" type="button">Acessar roteador</button>
+    <button disabled class="bp-btn button-folders bp-btn--bot bp-btn--rounded mb4" type="button">coming soon ;)</button>`;
+  }
+
   /* <button formaction="openAllBots(${botGroup.allBots})" class="bp-btn button-folders bp-btn--bot bp-btn--rounded mb4">Abrir todas skills</button> */
 }
 
